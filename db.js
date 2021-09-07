@@ -19,8 +19,14 @@ const User = conn.define('user', {
   password: STRING
 });
 
+User.beforeCreate(async (user) => {
+  const hashed = await bcrypt.hash('password', 3)
+  user.password = hashed;
+});
+
 User.byToken = async(token)=> {
   try {
+    console.log('this is token', token)
     const verifiedToken = jwt.verify(token, tokenSecret);
     console.log('verified token', verifiedToken);
     const user = await User.findByPk(verifiedToken.id);
@@ -42,22 +48,22 @@ User.authenticate = async({ username, password })=> {
   const user = await User.findOne({
     where: {
       username,
-      password
     },
   });
-  if(user){
-    const token = jwt.sign( { id: user.id, username: user.username }, tokenSecret)
-    return token;
-  }
+  console.log('this is user', user)
+  if (await bcrypt.compareSync(password, user.password)) {
+    try {
+      console.log('is this hitting')
+      const token = jwt.sign( { id: user.id, username: user.username }, tokenSecret)
+      console.log('is this token - from bcrypt', token)
+    return token;}
+    catch (err) {console.log('the bcrypt compare is errorring')}
+
+}
   const error = Error('bad credentials');
   error.status = 401;
   throw error;
 };
-
-User.beforeCreate(user => {
-    const hashed = bcrypt.hash('password', 3)
-    user.password = hashed; 
-  });
 
 const syncAndSeed = async()=> {
   await conn.sync({ force: true });
