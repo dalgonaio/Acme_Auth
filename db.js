@@ -20,7 +20,7 @@ const User = conn.define('user', {
 });
 
 User.beforeCreate(async (user) => {
-  const hashed = await bcrypt.hash('password', 3)
+  const hashed = await bcrypt.hash(user.password, 3)
   user.password = hashed;
 });
 
@@ -50,20 +50,25 @@ User.authenticate = async({ username, password })=> {
       username,
     },
   });
-  console.log('this is user', user)
-  if (await bcrypt.compareSync(password, user.password)) {
-    try {
-      console.log('is this hitting')
-      const token = jwt.sign( { id: user.id, username: user.username }, tokenSecret)
-      console.log('is this token - from bcrypt', token)
-    return token;}
-    catch (err) {console.log('the bcrypt compare is errorring')}
+  if(user){
+    const match = await bcrypt.compareSync(password, user.password)
+    if(match){
+      const token = jwt.sign( { id: user.id, username: user}, tokenSecret)
+      console.log(token)
+    return token
+    }
+  }
 
-}
   const error = Error('bad credentials');
   error.status = 401;
   throw error;
 };
+
+const Notes = conn.define('notes', {
+  text:{
+    type: Sequelize.STRING
+  }
+})
 
 const syncAndSeed = async()=> {
   await conn.sync({ force: true });
@@ -75,6 +80,17 @@ const syncAndSeed = async()=> {
   const [lucy, moe, larry] = await Promise.all(
     credentials.map( credential => User.create(credential))
   );
+  const theNotes = [
+    { text: 'this is lucy'},
+    { text: 'this is moe'},
+    { text: 'this is larry'}
+  ];
+  const [lucyNote, moeNote, larryNote] = await Promise.all(
+    theNotes.map( note => Notes.create(note)))
+    console.log(lucy)
+    await lucy.setNotes(lucyNote),
+    await moe.setNotes(moeNote),
+    await larry.setNotes(larryNote)
   return {
     users: {
       lucy,
@@ -84,9 +100,13 @@ const syncAndSeed = async()=> {
   };
 };
 
+Notes.belongsTo(User)
+User.hasMany(Notes)
+
 module.exports = {
   syncAndSeed,
   models: {
-    User
+    User,
+    Notes
   }
 };
