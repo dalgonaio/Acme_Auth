@@ -26,9 +26,7 @@ User.beforeCreate(async (user) => {
 
 User.byToken = async(token)=> {
   try {
-    console.log('this is token', token)
     const verifiedToken = jwt.verify(token, tokenSecret);
-    console.log('verified token', verifiedToken);
     const user = await User.findByPk(verifiedToken.id);
     if(user){
       return user;

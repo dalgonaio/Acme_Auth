@@ -73,7 +73,7 @@
 
       async getNotes(id){
           const theNotes = await axios.get(`/api/users/${id}/notes`);
-          this.setState({ notes: theNotes })
+          this.setState({ notes: theNotes.data })
         }
 
       componentDidMount(){
@@ -87,7 +87,7 @@
       }
       render(){
         console.log('this is state', this.state)
-        const { auth } = this.state;
+        const { auth, notes } = this.state;
         const { signIn, logout } = this;
         if(!auth.id){
           return <SignIn signIn={ signIn }/>
@@ -97,6 +97,11 @@
             <div>
               Welcome { auth.username }
               <button onClick={ logout }>Logout</button>
+              <div> {notes.map((note) => {
+                return <div key="note.id"> 
+                <ul>{note.text}</ul>
+                </div>
+              })}</div>
             </div>
           );
         }
