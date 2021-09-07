@@ -47,10 +47,12 @@
       constructor(){
         super();
         this.state = {
-          auth: {}
+          auth: {},
+          notes: []
         };
         this.signIn = this.signIn.bind(this);
         this.logout = this.logout.bind(this);
+        this.getNotes = this.getNotes.bind(this);
       }
       logout(){
         window.localStorage.removeItem('token');
@@ -65,8 +67,15 @@
             }
           });
           this.setState({ auth: response.data });
+          this.getNotes(response.data.id);
         }
       }
+
+      async getNotes(id){
+          const theNotes = await axios.get(`/api/users/${id}/notes`);
+          this.setState({ notes: theNotes })
+        }
+
       componentDidMount(){
         this.attemptTokenLogin();
       }
@@ -77,6 +86,7 @@
         this.attemptTokenLogin();
       }
       render(){
+        console.log('this is state', this.state)
         const { auth } = this.state;
         const { signIn, logout } = this;
         if(!auth.id){
