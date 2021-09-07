@@ -18,7 +18,7 @@ app.post("/api/auth", async (req, res, next) => {
 
 app.get("/api/auth", async (req, res, next) => {
   try {
-    console.log('this is header', req.headers)
+    console.log("this is header", req.headers);
     res.send(await User.byToken(req.headers.authorization));
   } catch (ex) {
     next(ex);
@@ -27,9 +27,11 @@ app.get("/api/auth", async (req, res, next) => {
 
 app.get("/api/users/:id/notes", async (req, res, next) => {
   try {
-    console.log('this is req.params', req.params)
-    const response = await User.findByPk(req.params.id, { include: [Notes] });  
-    res.send(response.notes);
+    const checkUser = await User.byToken(req.headers.authorization);
+    if (checkUser.id === req.params.id) {
+      const response = await User.findByPk(req.params.id, { include: [Notes] });
+      res.send(response.notes);
+    }
   } catch (ex) {
     console.log("your get notes route -err");
     next(ex);
