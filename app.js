@@ -6,6 +6,23 @@ const {
 } = require("./db");
 const path = require("path");
 
+//Internal if we refractor code to call byToken easily
+// const requireToken (req, res, next) => {
+//   try {
+//     const token = req.headers.authorization;
+//     const user = await User.byToken(token);
+//     req.user = user;
+//     next();
+//   } catch(error) {
+//     next(error);
+//   }
+// }
+
+// How to refractor
+// app.get('/home', requireToken, (req, res, next) => {
+//   res.send('Home page!');
+// });
+
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
 
 app.post("/api/auth", async (req, res, next) => {
