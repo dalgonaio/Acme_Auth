@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize');
 const { STRING } = Sequelize;
 const jwt = require("jsonwebtoken");
+const bcrypt = require('bcrypt')
 const config = {
   logging: false
 };
@@ -20,7 +21,9 @@ const User = conn.define('user', {
 
 User.byToken = async(token)=> {
   try {
-    const user = await User.findByPk(token);
+    const verifiedToken = jwt.verify(token, tokenSecret);
+    console.log('verified token', verifiedToken);
+    const user = await User.findByPk(verifiedToken.id);
     if(user){
       return user;
     }
@@ -40,7 +43,7 @@ User.authenticate = async({ username, password })=> {
     where: {
       username,
       password
-    }
+    },
   });
   if(user){
     const token = jwt.sign( { id: user.id, username: user.username }, tokenSecret)
@@ -50,6 +53,11 @@ User.authenticate = async({ username, password })=> {
   error.status = 401;
   throw error;
 };
+
+User.beforeCreate(user => {
+    const hashed = bcrypt.hash('password', 3)
+    user.password = hashed; 
+  });
 
 const syncAndSeed = async()=> {
   await conn.sync({ force: true });
